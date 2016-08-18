@@ -6,7 +6,6 @@ var poemSource = document.getElementById("poemSource");
 var setButton = document.getElementById("setButton");
 var output1 = document.getElementById("output1");
 var output2 = document.getElementById("output2");
-var output3 = document.getElementById("output3");
 
 var colourscheme = 	[
 	"#f00",
@@ -20,12 +19,10 @@ var colourscheme = 	[
 	"#700",
 	"#600",
 	"#500",
-	"#400",
-	"#300",
-	"#200",
-	"#100",
 	"#000"
 ];
+
+colourscheme.reverse();
 
 function calcFrequencies(array) {
     var frequency = {};
@@ -202,7 +199,7 @@ function calcScore(poem,oldPoem){
     if (uniques.length!=oldUniques.length){
     	score*=Math.exp(-(uniques.length-oldUniques.length)/oldUniques.length);
     } */
-    return score/phonemes.length;
+    return score/(phonemes.length*phonemes.length);
 }
 
 function calcPhonetics(poemWords){
@@ -215,6 +212,7 @@ function calcPhonetics(poemWords){
 			var w = l[j];
 			if (w in pronunciation){
 				var p = pronunciation[w];
+				var word = [];
 				for (var k=0;k<p.length;k++){
 					var phoneme = p[k];
 					var idx = Math.max(
@@ -224,9 +222,10 @@ function calcPhonetics(poemWords){
 					if (idx>=0){
 						phoneme = phoneme.substring(0,idx);
 					}
-					phonetic_line.push(phoneme);
+					word.push(phoneme);
 					phonemes.push(phoneme);
 				}
+				phonetic_line.push(word);
 			}
 		}
 		phonetic_poem.push(phonetic_line);
@@ -273,25 +272,30 @@ function setClick(){
 		output1_html+="<br>"
 	}
 
-	output1.innerHTML = output1_html;
 
 	var r = calcPhonetics(poemWords);
 	var phonetic_poem = r[0];
 	var phonemes = r[1];
 	var frequency = calcFrequencies(phonemes);
 	var max = frequency["_MAX_"];
-	var output2_html = "";
+	//output1_html += "<br>";
 	for (var i=0;i<phonetic_poem.length;i++){
 		var l = phonetic_poem[i];
 		for (var j=0;j<l.length;j++){
 			var w = l[j];
-			var freq = frequency[w];
-			w = "<span style='color:"+colourscheme[Math.floor(colourscheme.length*(1-freq/max))]+";'>"+w+"</span>";
-			output2_html += w+" ";
+			for (var k=0;k<w.length;k++){
+				var ph = w[k];
+				var freq = frequency[ph];
+				if (max>1){
+					ph = "<span style='color:"+colourscheme[Math.floor((colourscheme.length-1)*(freq===max?1:((freq-1)/(max))))]+";'>"+ph+"</span>";
+				}
+				output1_html += ph+" ";
+			}
+			output1_html+="&nbsp;&nbsp;&nbsp;";
 		}
-		output2_html+="<br>"
+		output1_html+="<br>"
 	}
-	output2.innerHTML = output2_html;
+	output1.innerHTML = output1_html;
 
 	/*
 	have assonance formula for set of phonemes 
@@ -320,13 +324,13 @@ function setClick(){
     });
 
 
-	var output3_html = "";
+	var output2_html = "";
     for (var i=0;i<Math.min(20,deltas.length);i++){
     	var delta=deltas[i];
-    	output3_html+="<hr>";
+    	output2_html+="<hr>";
     	var candPoem = applyDelta(poemWords,delta);
     	var score = calcScore(candPoem,candPoem);
-    	output3_html+="<b> score : "+score+"</b><br>";
+    	output2_html+="<b> score : "+score+"</b><br>";
     	for (var j=0;j<poemWords.length;j++){
     		var line=poemWords[j];
     		for (var k=0;k<line.length;k++){
@@ -334,9 +338,9 @@ function setClick(){
     			if (j===delta[0]&&k===delta[1]){
     				w = "<span style='background-color:red;'>"+delta[2]+"</span>";
     			}
-    			output3_html+=w+" ";
+    			output2_html+=w+" ";
     		}
-    		output3_html+="<br>";
+    		output2_html+="<br>";
     	}
 
 		var r = calcPhonetics(candPoem);
@@ -344,19 +348,30 @@ function setClick(){
 		var phonemes = r[1];
 		var frequency = calcFrequencies(phonemes);
 		var max = frequency["_MAX_"];
-		var output2_html = "";
 		for (var m=0;m<phonetic_poem.length;m++){
 			var l = phonetic_poem[m];
 			for (var j=0;j<l.length;j++){
 				var w = l[j];
-				var freq = frequency[w];
-				w = "<span style='color:"+colourscheme[Math.floor(colourscheme.length*(1-freq/max))]+";'>"+w+"</span>";
-				output3_html += w+" ";
+				if (m===delta[0]&&j===delta[1]){
+					output2_html += "<span style='text-decoration: underline;'>";
+				}
+				for (var k=0;k<w.length;k++){
+					var ph = w[k];
+					var freq = frequency[ph];
+					if (max>1){
+						freq = "<span style='color:"+colourscheme[Math.floor((colourscheme.length-1)*(freq===max?1:((freq-1)/(max))))]+";'>"+ph+"</span>";
+					}
+					output2_html += freq+" ";
+				}
+				if (m===delta[0]&&j===delta[1]){
+					output2_html += "</span>";
+				}
+				output2_html+="&nbsp;&nbsp;&nbsp;";
 			}
-			output3_html+="<br>"
+			output2_html+="<br>"
 		}
     }
-	output3.innerHTML = output3_html;
+	output2.innerHTML = output2_html;
 
 	window.console.log(deltas);
 }
