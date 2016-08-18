@@ -4,7 +4,7 @@
 <style type="text/css">	
 textarea {
 	width:100%;
-	height:40%;
+	height:5em;
 }
 .wordNotFound {
 	color:grey;
@@ -12,6 +12,9 @@ textarea {
 </style>
 </head>
 <body>
+<p>
+enter a line of text - this should suggest word substitutions that increase consonance/assonance, but it doesn't really work.
+<p>
 <textarea spellcheck="false" id="poemSource"></textarea>
 <p>
 <button id="setButton" type="">process!</button>
@@ -19,7 +22,6 @@ textarea {
 <div id="output1"></div>
 <p>
 <div id="output2"></div>
-<p>
 <div id="output3"></div>
 <p>
 <script src="pronunciationssmaller.js"></script>
