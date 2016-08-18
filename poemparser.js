@@ -6,6 +6,8 @@ var poemSource = document.getElementById("poemSource");
 var setButton = document.getElementById("setButton");
 var output1 = document.getElementById("output1");
 var output2 = document.getElementById("output2");
+var loading = document.getElementById("loadingmessage");
+loading.style.display="none";
 
 var colourscheme = 	[
 	"#f00",
