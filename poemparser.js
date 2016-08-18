@@ -6,6 +6,7 @@ var poemSource = document.getElementById("poemSource");
 var setButton = document.getElementById("setButton");
 var output1 = document.getElementById("output1");
 var output2 = document.getElementById("output2");
+var output3 = document.getElementById("output3");
 
 var colourscheme = 	[
 	"#B36305",
@@ -44,7 +45,19 @@ function applyDelta(poem,delta){
 	var i = delta[0];
 	var j = delta[1];
 	var w = delta[2];
-	result[i][j] = w;
+	if (w in pronunciation){
+		result[i][j] = w;
+	} else {
+		var words = w.split(/[ _,\-]+/);
+		for (var l=0;l<words.length;l++){
+			var w = words[l];
+			var ws = parseWord(w);
+			result[i].splice(1,j);
+			for (var k=0;k<ws.length;k++){
+				result[i].splice(0,j+k,ws[k]);
+			}
+		}
+	}
 	return result;
 }
 
@@ -90,6 +103,54 @@ function generateDeltas(poemWords){
 	return result;
 }
 
+function flattenPoem(poem){
+	var result=[];
+	for (var i=0;i<poem.length;i++){
+		var l = poem[i];
+		for (var j=0;j<l.length;j++){
+			var w = l[j];
+			result.push(w);
+		}
+	}
+	return result;
+}
+
+function flattenWords(words){
+	var result=[];
+	for (var i=0;i<words.length;i++){
+		var w = words[i];
+		if (w in pronunciation){
+			var ph = pronunciation[w];
+			for (var j=0;j<ph.length;j++){
+				result.push(ph);
+			}
+		}
+	}
+	return result;
+}
+function calcScore(poem){
+	var words = flattenPoem(poem);
+	var phonemes = flattenWords(words);
+
+	var frequencies = {};
+ 
+ 	var frequency = {};
+
+    phonemes.forEach(function(value) { frequency[value] = 0; });
+
+    var uniques = phonemes.filter(function(value) {
+        return ++frequency[value] == 1;
+    });
+
+    var score = 0;
+    for (var i=0;i<uniques.length;i++){
+    	var phoneme =  uniques[i];
+    	var f = frequency[phoneme];
+    	score += f*f;
+    }
+    return score/phonemes.length;
+}
+
 function setClick(){
 	var poem = poemSource.value;
 	var lines = poem.split(/\n+/);
@@ -115,6 +176,7 @@ function setClick(){
 	}
 
 	var output1_html = "";
+	output1_html +="<p><b> score : "+calcScore(poemWords)+"</b><br>";
 
 	for (var i=0;i<poemWords.length;i++){
 		var l = poemWords[i];
@@ -128,6 +190,7 @@ function setClick(){
 		}
 		output1_html+="<br>"
 	}
+
 	output1.innerHTML = output1_html;
 
 	var phonemes = [];
@@ -184,7 +247,36 @@ function setClick(){
 		var delta=deltas[i];
 		var candPoem = applyDelta(poemWords,delta);
 		var score=calcScore(candPoem);
+		delta.push(score);
 	}
+
+
+    deltas = deltas.sort(function(a, b) {
+        return b[3] - a[3];
+    });
+
+
+	var output3_html = "";
+    for (var i=0;i<Math.min(10,deltas.length);i++){
+    	var delta=deltas[i];
+    	output3_html+="<hr>";
+    	var candPoem = applyDelta(poemWords,delta);
+    	var score = calcScore(candPoem);
+    	output3_html+="<b> score : "+score+"</b><br>";
+    	for (var j=0;j<poemWords.length;j++){
+    		var line=poemWords[j];
+    		for (var k=0;k<line.length;k++){
+    			var w = line[k];
+    			if (j===delta[0]&&k===delta[1]){
+    				w = "<span style='background-color:red;'>"+delta[2]+"</span>";
+    			}
+    			output3_html+=w+" ";
+    		}
+    		output3_html+="<br>";
+    	}
+    }
+	output3.innerHTML = output3_html;
+
 	window.console.log(deltas);
 }
 
