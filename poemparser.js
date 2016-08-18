@@ -39,6 +39,15 @@ function sortByFrequency(array) {
     });
 }
 
+function applyDelta(poem,delta){
+	var result =  JSON.parse(JSON.stringify(poem));
+	var i = delta[0];
+	var j = delta[1];
+	var w = delta[2];
+	result[i][j] = w;
+	return result;
+}
+
 function parseWord(w){
 	var modified=true;
 	var result=[];
@@ -55,6 +64,28 @@ function parseWord(w){
 	}
 	if (w.length>0){
 		result.push(w);
+	}
+	return result;
+}
+
+function generateDeltas(poemWords){
+	var result= [];
+	for (var i=0;i<poemWords.length;i++){
+		var l = poemWords[i];
+		for (var j=0;j<l.length;j++){
+			var w = l[j];
+			if (!(w in synset)){
+				continue;
+			}
+			var synonyms = synset[w];
+			for (var k=0;k<synonyms.length;k++){
+				var syn = synonyms[k];
+				if (syn===w){
+					continue;
+				}
+				result.push([i,j,syn]);
+			}
+		}
 	}
 	return result;
 }
@@ -147,7 +178,14 @@ function setClick(){
 	replace that word by the optional one, and calculate score
 	show top 10 variations, with replaced word highlighted.*/
 
-	window.console.log(phonemes);
+	var deltas = generateDeltas(poemWords);
+
+	for (var i=0;i<deltas.length;i++){
+		var delta=deltas[i];
+		var candPoem = applyDelta(poemWords,delta);
+		var score=calcScore(candPoem);
+	}
+	window.console.log(deltas);
 }
 
 setButton.onclick=setClick;
